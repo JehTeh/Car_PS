@@ -1,0 +1,13 @@
+"D:\Applications\IAR\7_40\arm\bin\armproc.dll" 
+
+"D:\Applications\IAR\7_40\arm\bin\armxds100.dll" 
+
+"C:\Users\Jonathan\Documents\GitHub\Car_PS\IAR\Debug\Exe\CPS.out" 
+
+--plugin "D:\Applications\IAR\7_40\arm\bin\armbat.dll" 
+
+--flash_loader "D:\Applications\IAR\7_40\arm\config\flashloader\TexasInstruments\FlashRM42L430.board" 
+
+
+
+

@@ -14,6 +14,8 @@
 #include "sys_core.h"
 
 /* Defines */
+#define DEBUG == 1
+
 #define ADC_UPPERBOUND_SHFTUP 0x09D1u //These definitions set the limits for the ADC conversion to trigger a shift or horn signal.
 #define ADC_LOWERBOUND_SHFTUP 0x078Du
 #define ADC_UPPERBOUND_SHFTDN 0x0593u
@@ -138,7 +140,7 @@ void CPS_vISRADCGroup1(void)
   static uint32_t u32ShiftUpSuccessiveCount;
   static uint32_t u32ShiftDownSuccessiveCount;
   static uint32_t u32HornSuccessiveCount;
-  for(uint32_t u32Count = 0u; u32Count <= u32ADCDataTotal; u32Count++)
+  for(uint32_t u32Count = 0u; u32Count < u32ADCDataTotal; u32Count++)
   {
     if(u32ADCDataTotal >= ADC_DATABUFFERSIZE)
     {
@@ -330,7 +332,7 @@ static void vSendCommand(xHornCommands_t xCommand)
     break;
   case eCMD_ShiftDown:
     bShiftDownCommand = 1; //Send single shift down pulse
-    bShiftUpHoldActive = 1;
+    bShiftDownHoldActive = 1;
     break;
   case eCMD_HornOn:
     bHornActiveCommand = 1; //Switch on horn active signal
@@ -351,44 +353,62 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
   case eIO_Horn:
     if(u32OutputValue == 1)
     {
+
       gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_ON);
+
       gioSetBit(gioPORTA, 2u, 1u); //Debug horn both LEDs ON
       gioSetBit(hetPORT1, 8u, 1u);
+
     }
     else
     {
+
       gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_OFF);
+
       gioSetBit(gioPORTA, 2u, 0u); //Debug horn both LEDs Off
       gioSetBit(hetPORT1, 8u, 0u);
+
     }
     break;
   case eIO_ShiftUp:
     if(u32OutputValue == 1)
     {
+
       gioSetBit(IO_SHIFTUP_PORT, IO_SHIFTUP_PIN, IO_SHIFTUP_ON);
+
       gioSetBit(gioPORTA, 2u, 1u); //Debug horn 1 led on
       gioSetBit(hetPORT1, 8u, 0u);
+
     }
     else
     {
+
       gioSetBit(IO_SHIFTUP_PORT, IO_SHIFTUP_PIN, IO_SHIFTUP_OFF);
+
       gioSetBit(gioPORTA, 2u, 0u); //Debug both LEDs Off
       gioSetBit(hetPORT1, 8u, 0u);
+
       
     }
     break;
   case eIO_ShiftDown:
     if(u32OutputValue == 1)
     {
-      gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_ON);
+
+      //gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_ON);
+
       gioSetBit(gioPORTA, 2u, 0u); //Debug horn other led ON
       gioSetBit(hetPORT1, 8u, 1u);
+
     }
     else
     {
-      gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_OFF);
+
+      //gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_OFF);
+
       gioSetBit(gioPORTA, 2u, 0u); //Debug both LED Off
       gioSetBit(hetPORT1, 8u, 0u);
+
     }
     break;
   default:

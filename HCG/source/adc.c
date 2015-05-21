@@ -1,7 +1,7 @@
 /** @file adc.c 
 *   @brief ADC Driver Source File
-*   @date 03.Apr.2015
-*   @version 04.04.00
+*   @date 17.Nov.2014
+*   @version 04.02.00
 *
 *   This file contains:
 *   - API Functions
@@ -11,7 +11,7 @@
 */
 
 /* 
-* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
+* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -122,7 +122,7 @@ void adcInit(void)
     adcREG1->GxMODECR[1U] = (uint32)ADC_12_BIT
                           | (uint32)0x00000000U
                           | (uint32)0x00000000U
-                          | (uint32)0x00000002U;
+                          | (uint32)0x00000000U;
 
     /** - Setup group 1 hardware trigger
      *     - Setup hardware trigger edge
@@ -562,9 +562,6 @@ uint32 adcIsConversionComplete(adcBASE_t *adc, uint32 group)
 *   This function computes offset error using Calibration mode
 *
 */
-/* SourceId : ADC_SourceId_008 */
-/* DesignId : ADC_DesignId_010 */
-/* Requirements : HL_SR194 */
 void adcCalibration(adcBASE_t *adc)
 {
 /* USER CODE BEGIN (25) */

@@ -1,7 +1,7 @@
 /** @file rti.c 
 *   @brief RTI Driver Source File
-*   @date 17.Nov.2014
-*   @version 04.02.00
+*   @date 03.Apr.2015
+*   @version 04.04.00
 *
 *   This file contains:
 *   - API Functions
@@ -11,7 +11,7 @@
 */
 
 /* 
-* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
+* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -110,10 +110,10 @@ void rtiInit(void)
     rtiREG1->CNT[1U].CPUCx = 9U;
 
     /** - Setup compare 0 value. This value is compared with selected free running counter. */
-    rtiREG1->CMP[0U].COMPx = 10000U;
+    rtiREG1->CMP[0U].COMPx = 7300U;
 
     /** - Setup update compare 0 value. This value is added to the compare 0 value on each compare match. */
-    rtiREG1->CMP[0U].UDCPx = 10000U;
+    rtiREG1->CMP[0U].UDCPx = 7300U;
 
     /** - Setup compare 1 value. This value is compared with selected free running counter. */
     rtiREG1->CMP[1U].COMPx = 20000U;

@@ -1,7 +1,7 @@
 /** @file adc.h
 *   @brief ADC Driver Header File
-*   @date 17.Nov.2014
-*   @version 04.02.00
+*   @date 03.Apr.2015
+*   @version 04.04.00
 *   
 *   This file contains:
 *   - Definitions
@@ -12,7 +12,7 @@
 */
 
 /* 
-* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
+* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -190,7 +190,7 @@ typedef struct adc_config_reg
 #define ADC1_CLOCKCR_CONFIGVALUE		(9U)
 
 #define ADC1_G0MODECR_CONFIGVALUE		((uint32)ADC_12_BIT | (uint32)0x00000000U | (uint32)0x00000002U)
-#define ADC1_G1MODECR_CONFIGVALUE		((uint32)ADC_12_BIT | (uint32)0x00000000U | (uint32)0x00000000U | (uint32)0x00000000U)
+#define ADC1_G1MODECR_CONFIGVALUE		((uint32)ADC_12_BIT | (uint32)0x00000000U | (uint32)0x00000000U | (uint32)0x00000002U)
 #define ADC1_G2MODECR_CONFIGVALUE		((uint32)ADC_12_BIT | (uint32)0x00000000U | (uint32)0x00000000U | (uint32)0x00000000U)
 
 #define ADC1_G0SRC_CONFIGVALUE 			((uint32)0x00000008U | (uint32)ADC1_RTI_COMP0)
@@ -259,5 +259,8 @@ void adcNotification(adcBASE_t *adc, uint32 group);
 /* USER CODE BEGIN (3) */
 /* USER CODE END */
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

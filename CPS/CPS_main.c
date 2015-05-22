@@ -14,37 +14,40 @@
 #include "sys_core.h"
 
 /* Defines */
-#define DEBUG == 1
-
-#define ADC_UPPERBOUND_SHFTUP 0x09D1u //These definitions set the limits for the ADC conversion to trigger a shift or horn signal.
-#define ADC_LOWERBOUND_SHFTUP 0x078Du
-#define ADC_UPPERBOUND_SHFTDN 0x0593u
-#define ADC_LOWERBOUND_SHFTDN 0x044Au
-#define ADC_UPPERBOUND_HORNON 0x0440u
+#define DEBUG true
+//These definitions set the limits for the ADC conversion to trigger a shift or horn signal.
+#define ADC_UPPERBOUND_SHFTDN 0x0B27u //~1.3V-2.35V. >2.35V is considered "idle" signal
+#define ADC_LOWERBOUND_SHFTDN 0x0650u
+#define ADC_UPPERBOUND_SHFTUP 0x064Eu //~0.75-1.3V
+#define ADC_LOWERBOUND_SHFTUP 0x03A3u
+#define ADC_UPPERBOUND_HORNON 0x0365u //~0-0.7V
 #define ADC_LOWERBOUND_HORNON 0x0000u
-#define ADC_DATABUFFERSIZE 8u
+#define ADC_DATABUFFERSIZE 15u //Samples in ADC buffer
+#define ADC_MAXIMUMVALUE 0xFFFu
 
-#define DEBOUNCE_PADDLES_MS 30 //Debounce time in milliseconds for the paddle shift signal (should be multiple of ten)
+#define LOOPCOUNT_COMMANDINTERPRET 1
+
+#define DEBOUNCE_PADDLES_MS 30 //Debounce time in milliseconds for the paddle shift signal (should be multiple of 2)
 #define DEBOUNCE_HORN_MS    30 //Debounce time in milliseconds for the horn signal (off and on)
 
 #define ACTIVETIME_PADDLES_MS 10 //How long to hold the paddle switch for on a valid signal
 
-#define HOLDTIME_PADDLES_SAMPLES 3 //Number of consecutive valid samples for an "active" signal
+#define HOLDTIME_PADDLES_SAMPLES 3 //Number of consecutive valid averaged samples for an "active" signal (0.73ms apart)
 #define HOLDTIME_HORN_SAMPLES 3 
 
 #define IO_BYPASSRELAY_PORT hetPORT1 //idle bypass relay used to ensure horn signal works normally if module is in error state
-#define IO_BYPASSRELAY_PIN 6u
-#define IO_BYPASSRELAY_OPEN 1u
-#define IO_BYPASSRELAY_CLOSED 0u
+#define IO_BYPASSRELAY_PIN 2u       //Bypass relay is bypassing MCU if it is OPEN!
+#define IO_BYPASSRELAY_BYPASS 1u  //Signal active low
+#define IO_BYPASSRELAY_NOBYPASS 0u
 #define IO_SHIFTDOWN_PORT hetPORT1 //downshift output. Signal is active low.
-#define IO_SHIFTDOWN_PIN 0u
+#define IO_SHIFTDOWN_PIN 2u
 #define IO_SHIFTDOWN_ON 0u
 #define IO_SHIFTDOWN_OFF 1u
 #define IO_SHIFTUP_PORT hetPORT1 //upshift output. Signal is active low.
-#define IO_SHIFTUP_PIN 1u
+#define IO_SHIFTUP_PIN 2u
 #define IO_SHIFTUP_ON 0u
 #define IO_SHIFTUP_OFF 1u
-#define IO_HORN_PORT hetPORT1 //horn output. Signal?
+#define IO_HORN_PORT hetPORT1 //horn output. Signal active low
 #define IO_HORN_PIN 2u
 #define IO_HORN_ON 0u
 #define IO_HORN_OFF 1u
@@ -131,22 +134,38 @@ void CPS_vMain(void)
 }
 /* void CPS_vISRADCGroup1(void)
 *   Triggered on the completion of a conversion.Should interrupt every ms with a finished conversion
-*
+*   Reads back configured number of ADC samples, stores them in a buffer. Averages the data, sanity checks the value, then pushes this final
+*   value to the "time displaced" filter. (averaged samples are 1.5usec apart. Time displacement filter adds a 0.73ms delay before sampling
+*   again). Upon successful completion of displacement filter (ie consecutive valid signal for HOLDTIME_PADDLES_SAMPLES) command is relayed
+*   to output module.
 */
 void CPS_vISRADCGroup1(void)
 {
   uint32_t u32ADCDataTotal;
-  u32ADCDataTotal = adcGetData(adcREG1, adcGROUP1, &xADCData[0]);
+  uint64_t u64ADCAverageValue = 0u;
+  uint32_t u32ADCSampleCount = 0u;
   static uint32_t u32ShiftUpSuccessiveCount;
   static uint32_t u32ShiftDownSuccessiveCount;
   static uint32_t u32HornSuccessiveCount;
-  for(uint32_t u32Count = 0u; u32Count < u32ADCDataTotal; u32Count++)
+  
+  u32ADCDataTotal = adcGetData(adcREG1, adcGROUP1, &xADCData[0]);
+  for(uint32_t u32Count = 0u; u32Count < ADC_DATABUFFERSIZE; u32Count++) //average and filter results
   {
     if(u32ADCDataTotal >= ADC_DATABUFFERSIZE)
     {
       vERROR();
     }
-    switch(ProcessADCData(xADCData[u32Count].value))
+    u32ADCSampleCount++; //Increase averaging count
+    u64ADCAverageValue += xADCData[u32Count].value; //add latest sample 
+  }
+  u64ADCAverageValue = u64ADCAverageValue / u32ADCSampleCount; //Average data
+  if(u64ADCAverageValue > ADC_MAXIMUMVALUE)
+  {
+    vERROR();
+  }
+  for(uint32_t u32Count = 0u; u32Count < LOOPCOUNT_COMMANDINTERPRET; u32Count++)
+  {
+    switch(ProcessADCData((uint16_t)u64ADCAverageValue))
     {
     case eCMD_ShiftUp:
       u32ShiftDownSuccessiveCount = 0u; //clear other counters
@@ -207,7 +226,7 @@ void CPS_vISRADCGroup1(void)
 }
 
 /* void CPS_vISRRTICompare1(void)
-*   Triggered by the RTI compare0 timer. Should be 1ms time base. This is used by system counters to trigger ADC.
+*   Triggered by the RTI compare0 timer. Should be 0.73ms time base. This is used by system counters to trigger ADC.
 *
 */
 void CPS_vISRRTICompare0(void)
@@ -289,7 +308,8 @@ static void vInitCPS(void)
   {
     //Wait for start up time to expire
   }
-  gioSetBit(IO_BYPASSRELAY_PORT, IO_BYPASSRELAY_PIN, IO_BYPASSRELAY_OPEN); //
+  gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_OFF); //set horn IO inactive before ticking over relay
+  gioSetBit(IO_BYPASSRELAY_PORT, IO_BYPASSRELAY_PIN, IO_BYPASSRELAY_NOBYPASS); //we are ready to rumble!
   adcEnableNotification(adcREG1, adcGROUP1); //Enable ADC ISR routine
   adcResetFiFo(adcREG1, adcGROUP1);
   adcStartConversion(adcREG1, adcGROUP1);
@@ -353,62 +373,55 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
   case eIO_Horn:
     if(u32OutputValue == 1)
     {
-
       gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_ON);
-
+#if DEBUG
       gioSetBit(gioPORTA, 2u, 1u); //Debug horn both LEDs ON
       gioSetBit(hetPORT1, 8u, 1u);
-
+#endif
     }
     else
     {
-
       gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_OFF);
-
+#if DEBUG
       gioSetBit(gioPORTA, 2u, 0u); //Debug horn both LEDs Off
       gioSetBit(hetPORT1, 8u, 0u);
-
+#endif
     }
     break;
   case eIO_ShiftUp:
     if(u32OutputValue == 1)
     {
-
       gioSetBit(IO_SHIFTUP_PORT, IO_SHIFTUP_PIN, IO_SHIFTUP_ON);
-
+#if DEBUG
       gioSetBit(gioPORTA, 2u, 1u); //Debug horn 1 led on
       gioSetBit(hetPORT1, 8u, 0u);
-
+#endif
     }
     else
     {
-
       gioSetBit(IO_SHIFTUP_PORT, IO_SHIFTUP_PIN, IO_SHIFTUP_OFF);
-
+#if DEBUG
       gioSetBit(gioPORTA, 2u, 0u); //Debug both LEDs Off
       gioSetBit(hetPORT1, 8u, 0u);
-
-      
+#endif
     }
     break;
   case eIO_ShiftDown:
     if(u32OutputValue == 1)
     {
-
-      //gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_ON);
-
+      gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_ON);
+#if DEBUG
       gioSetBit(gioPORTA, 2u, 0u); //Debug horn other led ON
       gioSetBit(hetPORT1, 8u, 1u);
-
+#endif
     }
     else
     {
-
-      //gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_OFF);
-
+      gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_OFF);
+#if DEBUG
       gioSetBit(gioPORTA, 2u, 0u); //Debug both LED Off
       gioSetBit(hetPORT1, 8u, 0u);
-
+#endif
     }
     break;
   default:
@@ -420,7 +433,8 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
 static void vERROR(void)
 {
   //Crash system through WDT
-  dwdInit(2u); //initialize WDT
-  dwdCounterEnable(); //start counting
-  while(1); //Hold until crashed.
+  gioSetBit(IO_BYPASSRELAY_PORT, IO_BYPASSRELAY_PIN, IO_BYPASSRELAY_BYPASS);
+  dwdInit(2u); //initialize WDT with low countdown
+  dwdCounterEnable(); //start counting 
+  while(1); //Hold until crashed and system reboots
 }

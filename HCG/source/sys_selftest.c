@@ -1,14 +1,14 @@
 /** @file sys_selftest.c
 *   @brief Selftest Source File
-*   @date 17.Nov.2014
-*   @version 04.02.00
+*   @date 03.Apr.2015
+*   @version 04.04.00
 *
 *   This file contains:
 *   - Selftest API's
 */
 
 /* 
-* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
+* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -2436,7 +2436,7 @@ void errata_PBIST_4(void)
 			/* 2 - Divide value ( Default is 2 in HALCoGen) */
 			/* 1000 = 0x3E8 - Test Loop count in ROM Algorithm */
 			pmuCount = pmuCount - pmuCalibration;
-            PBIST_wait_done_loop = ((sint32)pmuCount/2) - 1000;
+            PBIST_wait_done_loop = ((sint32)pmuCount) - 1000;
 
             /* Check PBIST status results (Address, Status, Count, etc...) */
             if ((pbistREG->FSRA0 | pbistREG->FSRA1 | pbistREG->FSRDL0 | pbistREG->rsvd3 |

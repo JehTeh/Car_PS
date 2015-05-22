@@ -41,7 +41,7 @@
           
           
           
-        <item>bStartUpTimeDone</item><item>u32StartTimeCounter</item><item>u32ADCDataTotal</item><item>xADCData</item><item>u16Data</item><item>u32Count</item><item>u32ShiftDownSuccessiveCount</item><item>u32PaddleDebounceCounter</item><item>bPaddleDebounceActive</item><item></item></expressions>
+        <item>bStartUpTimeDone</item><item>u32StartTimeCounter</item><item>u32ADCDataTotal</item><item>xADCData</item><item>u16Data</item><item>u32Count</item><item>u32ShiftDownSuccessiveCount</item><item>u32PaddleDebounceCounter</item><item>bPaddleDebounceActive</item><item/></expressions>
         <col-names>
           
           

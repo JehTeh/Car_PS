@@ -19,6 +19,22 @@
 @REM 
 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.0\common\bin\cspybat" "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.0\arm\bin\armproc.dll" "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.0\arm\bin\armxds100.dll"  %1 --plugin "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.0\arm\bin\armbat.dll" --flash_loader "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.0\arm\config\flashloader\TexasInstruments\FlashRM42L430.board" --backend -B "--endian=little" "--cpu=Cortex-R4" "--fpu=None" "-p" "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.0\arm\CONFIG\debugger\TexasInstruments\RM42L432PZ.ddf" "--drv_verify_download" "--semihosting" "--device=RM42L432PZ" "--xds_board_file=C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.0\arm\config\debugger\TexasInstruments\xds\RM48L_XDS100v2.dat" 
+@echo off 
 
+if not "%1" == "" goto debugFile 
 
+@echo on 
+
+"D:\Applications\IAR\7_40\common\bin\cspybat" -f "C:\Users\Jonathan\Documents\GitHub\Car_PS\IAR\settings\CPS.Debug.general.xcl" --backend -f "C:\Users\Jonathan\Documents\GitHub\Car_PS\IAR\settings\CPS.Debug.driver.xcl" 
+
+@echo off 
+goto end 
+
+:debugFile 
+
+@echo on 
+
+"D:\Applications\IAR\7_40\common\bin\cspybat" -f "C:\Users\Jonathan\Documents\GitHub\Car_PS\IAR\settings\CPS.Debug.general.xcl" "--debug_file=%1" --backend -f "C:\Users\Jonathan\Documents\GitHub\Car_PS\IAR\settings\CPS.Debug.driver.xcl" 
+
+@echo off 
+:end

@@ -1,7 +1,7 @@
 /** @file can.c 
 *   @brief CAN Driver Source File
-*   @date 17.Nov.2014
-*   @version 04.02.00
+*   @date 03.Apr.2015
+*   @version 04.04.00
 *
 *   This file contains:
 *   - API Functions
@@ -11,7 +11,7 @@
 */
 
 /* 
-* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
+* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -62,7 +62,7 @@
 
 #if ((__little_endian__ == 1) || (__LITTLE_ENDIAN__ == 1))
 #else
-    static const uint32 s_canByteOrder[] = {3U, 2U, 1U, 0U, 7U, 6U, 5U, 4U};
+    static const uint32 s_canByteOrder[8U] = {3U, 2U, 1U, 0U, 7U, 6U, 5U, 4U};
 #endif
 
 /* USER CODE BEGIN (2) */

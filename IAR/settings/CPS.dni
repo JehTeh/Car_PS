@@ -48,7 +48,7 @@ xds100foundProbes=
 xdsResetStyle=0
 xdsResetStrategy=2
 [DebugChecksum]
-Checksum=-1130329137
+Checksum=-1397440745
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -60,8 +60,6 @@ MixedMode=1
 Placement=_ 738 439 1183 722
 [struct_types]
 Fmt0=adcData_t-value	4	0
-[watch_formats]
-Fmt0={W}1:u64ADCAverageValue	4	0
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -72,8 +70,7 @@ LogFile=_ ""
 [Disassemble mode]
 mode=0
 [Breakpoints]
-Bp0=_ "STD_CODE" "{C:\Users\JehTeh\Documents\GitHub\Car_PS\HCG\source\dabort.asm}.50.1" 1 0 0 0 "" 0 "" 0
-Count=1
+Count=0
 [Aliases]
 Count=0
 SuppressDialog=0

@@ -1,12 +1,12 @@
 /** @file sci.c 
 *   @brief SCI Driver Implementation File
-*   @date 17.Nov.2014
-*   @version 04.02.00
+*   @date 03.Apr.2015
+*   @version 04.04.00
 *
 */
 
 /* 
-* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
+* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -51,7 +51,7 @@
 *   @brief Interrupt mode globals
 *
 */
-static struct g_sciTransfer
+static volatile struct g_sciTransfer
 {
     uint32   mode;         /* Used to check for TX interrupt Enable */  
     uint32   tx_length;    /* Transmit data length in number of Bytes */
@@ -203,8 +203,8 @@ void sciSetBaudrate(sciBASE_t *sci, uint32 baud)
 /* USER CODE END */
 
     /*SAFETYMCUSW 96 S MR:6.1 <APPROVED> "Calculations including int and float cannot be avoided" */
-	temp = (f*(baud + 1U));
-	temp2 = ((vclk)/((float64)temp));
+	temp = (f*(baud));
+	temp2 = ((vclk)/((float64)temp))-1U;
 	sci->BRS = (uint32)((uint32)temp2 & 0x00FFFFFFU);
 	
 /* USER CODE BEGIN (7) */
@@ -567,6 +567,9 @@ void sciEnableNotification(sciBASE_t *sci, uint32 flags)
 *                      SCI_WAKE_INT  - wakeup,
 *                      SCI_BREAK_INT - break detect
 */
+/* SourceId : SCI_SourceId_015 */
+/* DesignId : SCI_DesignId_013 */
+/* Requirements : HL_SR242 */
 void sciDisableNotification(sciBASE_t *sci, uint32 flags)
 {
 

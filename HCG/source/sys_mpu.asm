@@ -1,7 +1,7 @@
 ;-------------------------------------------------------------------------------
 ; sys_mpu.asm
 ;
-; Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
+; Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
 ; 
 ; 
 ;  Redistribution and use in source and binary forms, with or without 
@@ -141,6 +141,16 @@ _mpuInit_
         movw  r0,  #((0 << 15) + (0 << 14) + (0 << 13) + (0 << 12) + (0 << 11) + (0 << 10) + (0 <<  9) + (0 <<  8) + (0x17 << 1) + (1))
         mcr   p15, #0,    r0, c6, c1, #2
 
+        ; Enable mpu background region
+        mrc   p15, #0, r0,      c1, c0, #0
+        orr   r0,  r0, #0x20000
+        mcr   p15, #0, r0,      c1, c0, #0
+        ; Enable mpu
+        mrc   p15, #0, r0, c1, c0, #0
+        orr   r0,  r0, #1
+        dsb
+        mcr   p15, #0, r0, c1, c0, #0
+        isb
         ldmfd sp!, {r0}
         bx    lr
 

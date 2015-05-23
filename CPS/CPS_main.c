@@ -11,48 +11,46 @@
 
 /* Include Files */
 #include "CPS_main.h"
-#include "spi.h"
 #include "sys_core.h"
 
 /* Defines */
 #define DEBUG true
 //These definitions set the limits for the ADC conversion to trigger a shift or horn signal.
-//ADC res is 0.000805664V/LSB
-#define ADC_UPPERBOUND_SHFTUP 0x0C1Fu //~1.5V-2.5V. >2.5V is considered "idle" signal
-#define ADC_LOWERBOUND_SHFTUP 0x0746u
-#define ADC_UPPERBOUND_SHFTDN 0x064Eu //~0.70-1.3V
-#define ADC_LOWERBOUND_SHFTDN 0x0200u
-#define ADC_UPPERBOUND_HORNON 0x0150u //~0-0.7V
+#define ADC_UPPERBOUND_SHFTDN 0x0B27u //~1.3V-2.35V. >2.35V is considered "idle" signal
+#define ADC_LOWERBOUND_SHFTDN 0x0650u
+#define ADC_UPPERBOUND_SHFTUP 0x064Eu //~0.75-1.3V
+#define ADC_LOWERBOUND_SHFTUP 0x03A3u
+#define ADC_UPPERBOUND_HORNON 0x0365u //~0-0.7V
 #define ADC_LOWERBOUND_HORNON 0x0000u
-#define ADC_DATABUFFERSIZE 32u //Samples in ADC buffer
+#define ADC_DATABUFFERSIZE 15u //Samples in ADC buffer
 #define ADC_MAXIMUMVALUE 0xFFFu
 
 #define LOOPCOUNT_COMMANDINTERPRET 1
 
-#define DEBOUNCE_PADDLES_MS 50 //Debounce time in milliseconds for the paddle shift signal (should be multiple of 2)
-#define DEBOUNCE_HORN_MS    50 //Debounce time in milliseconds for the horn signal (off and on)
+#define DEBOUNCE_PADDLES_MS 30 //Debounce time in milliseconds for the paddle shift signal (should be multiple of 2)
+#define DEBOUNCE_HORN_MS    30 //Debounce time in milliseconds for the horn signal (off and on)
 
-#define ACTIVETIME_PADDLES_MS 30 //How long to hold the paddle switch for on a valid signal
+#define ACTIVETIME_PADDLES_MS 10 //How long to hold the paddle switch for on a valid signal
 
 #define HOLDTIME_PADDLES_SAMPLES 3 //Number of consecutive valid averaged samples for an "active" signal (0.73ms apart)
 #define HOLDTIME_HORN_SAMPLES 3 
 
-#define IO_BYPASSRELAY_PORT spiPORT3 //idle bypass relay used to ensure horn signal works normally if module is in error state
-#define IO_BYPASSRELAY_PIN SPI_PIN_CLK       //Bypass relay is bypassing MCU if it is OPEN!
-#define IO_BYPASSRELAY_BYPASS 0u  //Signal active low
-#define IO_BYPASSRELAY_NOBYPASS 1u
-#define IO_SHIFTDOWN_PORT spiPORT2 //downshift output. Signal is active high.
-#define IO_SHIFTDOWN_PIN SPI_PIN_CLK
-#define IO_SHIFTDOWN_ON 1u
-#define IO_SHIFTDOWN_OFF 0u
-#define IO_SHIFTUP_PORT spiPORT2 //upshift output. Signal is active low.
-#define IO_SHIFTUP_PIN SPI_PIN_SIMO
-#define IO_SHIFTUP_ON 1u
-#define IO_SHIFTUP_OFF 0u
-#define IO_HORN_PORT spiPORT3 //horn output. Signal active high
-#define IO_HORN_PIN SPI_PIN_SOMI
-#define IO_HORN_ON 1u
-#define IO_HORN_OFF 0u
+#define IO_BYPASSRELAY_PORT hetPORT1 //idle bypass relay used to ensure horn signal works normally if module is in error state
+#define IO_BYPASSRELAY_PIN 2u       //Bypass relay is bypassing MCU if it is OPEN!
+#define IO_BYPASSRELAY_BYPASS 1u  //Signal active low
+#define IO_BYPASSRELAY_NOBYPASS 0u
+#define IO_SHIFTDOWN_PORT hetPORT1 //downshift output. Signal is active low.
+#define IO_SHIFTDOWN_PIN 2u
+#define IO_SHIFTDOWN_ON 0u
+#define IO_SHIFTDOWN_OFF 1u
+#define IO_SHIFTUP_PORT hetPORT1 //upshift output. Signal is active low.
+#define IO_SHIFTUP_PIN 2u
+#define IO_SHIFTUP_ON 0u
+#define IO_SHIFTUP_OFF 1u
+#define IO_HORN_PORT hetPORT1 //horn output. Signal active low
+#define IO_HORN_PIN 2u
+#define IO_HORN_ON 0u
+#define IO_HORN_OFF 1u
 
 #define STARTUPTIME_MS 3000 //CPS "start up" time in milliseconds. All ADC signals are ignored until this time has expired.
 
@@ -89,8 +87,7 @@ static bool bHornActiveCommand;
 static bool bShiftUpHoldActive;
 static bool bShiftDownHoldActive;
 
-static bool bADCStartNewSample;
-static bool bADCSampleProcessed;
+static adcData_t xADCData[ADC_DATABUFFERSIZE];
 
 /* Local Function Prototypes */
 static void vInitCPS(void);
@@ -147,23 +144,19 @@ void CPS_vISRADCGroup1(void)
   uint32_t u32ADCDataTotal;
   uint64_t u64ADCAverageValue = 0u;
   uint32_t u32ADCSampleCount = 0u;
-  adcData_t xADCData[ADC_DATABUFFERSIZE];
   static uint32_t u32ShiftUpSuccessiveCount;
   static uint32_t u32ShiftDownSuccessiveCount;
   static uint32_t u32HornSuccessiveCount;
-
-  u32ADCDataTotal = adcGetData(adcREG1, adcGROUP1, &xADCData[0]);
-  adcResetFiFo(adcREG1, adcGROUP1);
   
-  if(u32ADCDataTotal > ADC_DATABUFFERSIZE)
+  u32ADCDataTotal = adcGetData(adcREG1, adcGROUP1, &xADCData[0]);
+  for(uint32_t u32Count = 0u; u32Count < ADC_DATABUFFERSIZE; u32Count++) //average and filter results
+  {
+    if(u32ADCDataTotal >= ADC_DATABUFFERSIZE)
     {
       vERROR();
     }
-  for(uint32_t u32Count = 0u; u32Count < ADC_DATABUFFERSIZE; u32Count++) //average and filter results
-  {
     u32ADCSampleCount++; //Increase averaging count
     u64ADCAverageValue += xADCData[u32Count].value; //add latest sample 
-
   }
   u64ADCAverageValue = u64ADCAverageValue / u32ADCSampleCount; //Average data
   if(u64ADCAverageValue > ADC_MAXIMUMVALUE)
@@ -230,7 +223,6 @@ void CPS_vISRADCGroup1(void)
       break;
     }
   }
-  bADCSampleProcessed = 1;
 }
 
 /* void CPS_vISRRTICompare1(void)
@@ -239,14 +231,8 @@ void CPS_vISRADCGroup1(void)
 */
 void CPS_vISRRTICompare0(void)
 {
-  if(bADCStartNewSample)
-  {
-    adcStartConversion(adcREG1, adcGROUP1); 
-  }
-  if(bADCSampleProcessed)
-  {
-    bADCStartNewSample = 1;
-  }
+  adcResetFiFo(adcREG1, adcGROUP1);
+  adcStartConversion(adcREG1, adcGROUP1);
 }
 
 /* void CPS_vISRRTICompare1(void)
@@ -313,7 +299,6 @@ static void vInitCPS(void)
   hetInit();
   adcInit();
   rtiInit();
-  spiInit();
   bStartUpTimeDone = 0;
   rtiResetCounter(0u);
   rtiStartCounter(0u);
@@ -324,9 +309,9 @@ static void vInitCPS(void)
     //Wait for start up time to expire
   }
   gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_OFF); //set horn IO inactive before ticking over relay
- // gioSetBit(IO_BYPASSRELAY_PORT, IO_BYPASSRELAY_PIN, IO_BYPASSRELAY_NOBYPASS); //we are ready to rumble!
+  gioSetBit(IO_BYPASSRELAY_PORT, IO_BYPASSRELAY_PIN, IO_BYPASSRELAY_NOBYPASS); //we are ready to rumble!
   adcEnableNotification(adcREG1, adcGROUP1); //Enable ADC ISR routine
-   adcResetFiFo(adcREG1, adcGROUP1);
+  adcResetFiFo(adcREG1, adcGROUP1);
   adcStartConversion(adcREG1, adcGROUP1);
   rtiEnableNotification(rtiNOTIFICATION_COMPARE0);
 }
@@ -388,7 +373,7 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
   case eIO_Horn:
     if(u32OutputValue == 1)
     {
-//      gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_ON);
+      gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_ON);
 #if DEBUG
       gioSetBit(gioPORTA, 2u, 1u); //Debug horn both LEDs ON
       gioSetBit(hetPORT1, 8u, 1u);
@@ -396,7 +381,7 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
     }
     else
     {
- //     gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_OFF);
+      gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_OFF);
 #if DEBUG
       gioSetBit(gioPORTA, 2u, 0u); //Debug horn both LEDs Off
       gioSetBit(hetPORT1, 8u, 0u);
@@ -406,7 +391,7 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
   case eIO_ShiftUp:
     if(u32OutputValue == 1)
     {
-  //    gioSetBit(IO_SHIFTUP_PORT, IO_SHIFTUP_PIN, IO_SHIFTUP_ON);
+      gioSetBit(IO_SHIFTUP_PORT, IO_SHIFTUP_PIN, IO_SHIFTUP_ON);
 #if DEBUG
       gioSetBit(gioPORTA, 2u, 1u); //Debug horn 1 led on
       gioSetBit(hetPORT1, 8u, 0u);
@@ -414,7 +399,7 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
     }
     else
     {
- //     gioSetBit(IO_SHIFTUP_PORT, IO_SHIFTUP_PIN, IO_SHIFTUP_OFF);
+      gioSetBit(IO_SHIFTUP_PORT, IO_SHIFTUP_PIN, IO_SHIFTUP_OFF);
 #if DEBUG
       gioSetBit(gioPORTA, 2u, 0u); //Debug both LEDs Off
       gioSetBit(hetPORT1, 8u, 0u);
@@ -424,7 +409,7 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
   case eIO_ShiftDown:
     if(u32OutputValue == 1)
     {
- //     gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_ON);
+      gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_ON);
 #if DEBUG
       gioSetBit(gioPORTA, 2u, 0u); //Debug horn other led ON
       gioSetBit(hetPORT1, 8u, 1u);
@@ -432,7 +417,7 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
     }
     else
     {
-  //    gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_OFF);
+      gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_OFF);
 #if DEBUG
       gioSetBit(gioPORTA, 2u, 0u); //Debug both LED Off
       gioSetBit(hetPORT1, 8u, 0u);
@@ -448,7 +433,7 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
 static void vERROR(void)
 {
   //Crash system through WDT
-  //gioSetBit(IO_BYPASSRELAY_PORT, IO_BYPASSRELAY_PIN, IO_BYPASSRELAY_BYPASS);
+  gioSetBit(IO_BYPASSRELAY_PORT, IO_BYPASSRELAY_PIN, IO_BYPASSRELAY_BYPASS);
   dwdInit(2u); //initialize WDT with low countdown
   dwdCounterEnable(); //start counting 
   while(1); //Hold until crashed and system reboots

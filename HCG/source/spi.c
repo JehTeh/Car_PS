@@ -1,11 +1,11 @@
 /** @file spi.c
 *   @brief SPI Driver Implementation File
-*   @date 17.Nov.2014
-*   @version 04.02.00
+*   @date 03.Apr.2015
+*   @version 04.04.00
 */
 
 /* 
-* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
+* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -49,7 +49,7 @@
 *   @brief globals
 *
 */
-static struct g_spiPacket
+static volatile struct g_spiPacket
 {
     spiDAT1_t g_spiDataFormat;
     uint32  tx_length;
@@ -189,15 +189,15 @@ void spiInit(void)
 
     /** - SPI2 Port pullup / pulldown enable*/
     spiREG2->PC7  =   (uint32)((uint32)0U << 0U)  /* SCS[0] */
-                    | (uint32)((uint32)1U << 9U)  /* CLK */
-                    | (uint32)((uint32)1U << 10U)  /* SIMO */
-                    | (uint32)((uint32)0U << 11U); /* SOMI */
-
-    /* SPI2 set all pins to functional */
-    spiREG2->PC0  =   (uint32)((uint32)0U << 0U)  /* SCS[0] */
                     | (uint32)((uint32)0U << 9U)  /* CLK */
                     | (uint32)((uint32)0U << 10U)  /* SIMO */
                     | (uint32)((uint32)0U << 11U); /* SOMI */
+
+    /* SPI2 set all pins to functional */
+    spiREG2->PC0  =   (uint32)((uint32)1U << 0U)  /* SCS[0] */
+                    | (uint32)((uint32)1U << 9U)  /* CLK */
+                    | (uint32)((uint32)1U << 10U)  /* SIMO */
+                    | (uint32)((uint32)1U << 11U); /* SOMI */
 
     /** - Initialize TX and RX data buffer Status */
     g_spiPacket_t[1U].tx_data_status  = SPI_READY;
@@ -305,9 +305,9 @@ void spiInit(void)
     /** - SPI3 Port direction */
     spiREG3->PC1  =   (uint32)((uint32)1U << 0U)  /* SCS[0] */
                     | (uint32)((uint32)0U << 8U)  /* ENA */
-                    | (uint32)((uint32)0U << 9U)  /* CLK */
+                    | (uint32)((uint32)1U << 9U)  /* CLK */
                     | (uint32)((uint32)1U << 10U)  /* SIMO */
-                    | (uint32)((uint32)1U << 11U); /* SOMI */
+                    | (uint32)((uint32)0U << 11U); /* SOMI */
 
     /** - SPI3 Port open drain enable */
     spiREG3->PC6  =   (uint32)((uint32)0U << 0U)  /* SCS[0] */
@@ -326,16 +326,16 @@ void spiInit(void)
     /** - SPI3 Port pullup / pulldown enable*/
     spiREG3->PC7  =   (uint32)((uint32)0U << 0U)  /* SCS[0] */
                     | (uint32)((uint32)0U << 8U)  /* ENA */
-                    | (uint32)((uint32)1U << 9U)  /* CLK */
+                    | (uint32)((uint32)0U << 9U)  /* CLK */
                     | (uint32)((uint32)0U << 10U)  /* SIMO */
-                    | (uint32)((uint32)1U << 11U); /* SOMI */
+                    | (uint32)((uint32)0U << 11U); /* SOMI */
 
     /* SPI3 set all pins to functional */
     spiREG3->PC0  =   (uint32)((uint32)1U << 0U)  /* SCS[0] */
                     | (uint32)((uint32)1U << 8U)  /* ENA */
-                    | (uint32)((uint32)0U << 9U)  /* CLK */
-                    | (uint32)((uint32)0U << 10U)  /* SIMO */
-                    | (uint32)((uint32)0U << 11U); /* SOMI */
+                    | (uint32)((uint32)1U << 9U)  /* CLK */
+                    | (uint32)((uint32)1U << 10U)  /* SIMO */
+                    | (uint32)((uint32)1U << 11U); /* SOMI */
 
     /** - Initialize TX and RX data buffer Status */
     g_spiPacket_t[2U].tx_data_status  = SPI_READY;
@@ -344,7 +344,6 @@ void spiInit(void)
     spiREG3->GCR1 = (spiREG3->GCR1 & 0xFEFFFFFFU) | 0x01000000U;
 
 /* USER CODE BEGIN (3) */
-  
 /* USER CODE END */
 }
 

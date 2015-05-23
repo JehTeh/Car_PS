@@ -1,14 +1,14 @@
 /** @file sys_selftest.c
 *   @brief Selftest Source File
-*   @date 03.Apr.2015
-*   @version 04.04.00
+*   @date 17.Nov.2014
+*   @version 04.02.00
 *
 *   This file contains:
 *   - Selftest API's
 */
 
 /* 
-* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
+* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -2436,7 +2436,7 @@ void errata_PBIST_4(void)
 			/* 2 - Divide value ( Default is 2 in HALCoGen) */
 			/* 1000 = 0x3E8 - Test Loop count in ROM Algorithm */
 			pmuCount = pmuCount - pmuCalibration;
-            PBIST_wait_done_loop = ((sint32)pmuCount) - 1000;
+            PBIST_wait_done_loop = ((sint32)pmuCount/2) - 1000;
 
             /* Check PBIST status results (Address, Status, Count, etc...) */
             if ((pbistREG->FSRA0 | pbistREG->FSRA1 | pbistREG->FSRDL0 | pbistREG->rsvd3 |
@@ -2475,12 +2475,6 @@ void errata_PBIST_4(void)
 */
 void enableParity(void)
 {
-    VIM_PARCTL = 0xAU;             /* Enable VIM RAM parity */
-    canREG1->CTL = ((uint32)0xAU << 10U) | 1U;    /* Enable CAN1 RAM parity */
-    canREG2->CTL = ((uint32)0xAU << 10U) | 1U;    /* Enable CAN2 RAM parity */
-    adcREG1->PARCR = 0xAU;         /* Enable ADC1 RAM parity */
-    hetREG1->PCR = 0xAU;           /* Enable HET1 RAM parity */
-    htuREG1->PCR = 0xAU;           /* Enable HTU1 RAM parity */
 }
 
 /** @fn void disableParity(void)
@@ -2492,10 +2486,4 @@ void enableParity(void)
 */
 void disableParity(void)
 {
-    VIM_PARCTL = 0x5U;             /* Disable VIM RAM parity */
-    canREG1->CTL = ((uint32)0x5U << 10U) | 1U;    /* Disable CAN1 RAM parity */
-    canREG2->CTL = ((uint32)0x5U << 10U) | 1U;    /* Disable CAN2 RAM parity */
-    adcREG1->PARCR = 0x5U;         /* Disable ADC1 RAM parity */
-    hetREG1->PCR = 0x5U;           /* Disable HET1 RAM parity */
-    htuREG1->PCR = 0x5U;           /* Disable HTU1 RAM parity */
 }

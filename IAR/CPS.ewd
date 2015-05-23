@@ -53,7 +53,7 @@
         </option>
         <option>
           <name>RunToName</name>
-          <state>main</state>
+          <state>CPS_vMain</state>
         </option>
         <option>
           <name>CExtraOptionsCheck</name>

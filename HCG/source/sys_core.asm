@@ -1,7 +1,7 @@
 ;-------------------------------------------------------------------------------
 ; sys_core.asm
 ;
-; Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com 
+; Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
 ; 
 ; 
 ;  Redistribution and use in source and binary forms, with or without 
@@ -140,9 +140,9 @@ _coreInitStackPointer_
 userSp  dcd 0x08000000+0x00001000
 svcSp   dcd 0x08000000+0x00001000+0x00000100
 fiqSp   dcd 0x08000000+0x00001000+0x00000100+0x00000100
-irqSp   dcd 0x08000000+0x00001000+0x00000100+0x00000100+0x00000100
-abortSp dcd 0x08000000+0x00001000+0x00000100+0x00000100+0x00000100+0x00000100
-undefSp dcd 0x08000000+0x00001000+0x00000100+0x00000100+0x00000100+0x00000100+0x00000100
+irqSp   dcd 0x08000000+0x00001000+0x00000100+0x00000100+0x00001000
+abortSp dcd 0x08000000+0x00001000+0x00000100+0x00000100+0x00001000+0x00000100
+undefSp dcd 0x08000000+0x00001000+0x00000100+0x00000100+0x00001000+0x00000100+0x00000100
 
     
 
@@ -570,9 +570,6 @@ _disable_interrupt_
 
 ;-------------------------------------------------------------------------------
 ; Disable FIQ interrupt
-; SourceId : CORE_SourceId_026
-; DesignId : CORE_DesignId_026
-; Requirements: HL_SR494
 
         public _disable_FIQ_interrupt_
         

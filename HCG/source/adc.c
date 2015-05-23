@@ -1,7 +1,7 @@
 /** @file adc.c 
 *   @brief ADC Driver Source File
-*   @date 03.Apr.2015
-*   @version 04.04.00
+*   @date 17.Nov.2014
+*   @version 04.02.00
 *
 *   This file contains:
 *   - API Functions
@@ -11,7 +11,7 @@
 */
 
 /* 
-* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
+* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -132,14 +132,14 @@ void adcInit(void)
                    | (uint32)ADC1_EVENT;
 
     /** - Setup group 1 sample window */
-    adcREG1->G1SAMP = 0U;
+    adcREG1->G1SAMP = 8U;
 
     /** - Setup group 1 sample discharge 
     *     - Setup discharge prescaler
     *     - Enable/Disable discharge
     */
-    adcREG1->G1SAMPDISEN = (uint32)((uint32)0U << 8U)
-                         | (uint32)0x00000000U;
+    adcREG1->G1SAMPDISEN = (uint32)((uint32)1U << 8U)
+                         | (uint32)0x00000001U;
 
     /** - Setup group 2 conversion mode
      *     - Setup data format
@@ -233,7 +233,6 @@ static const uint32 s_adcSelect[1U][3U] =
     0x00000000U |
     0x00000000U |
     0x00000000U,
-    0x00000001U |
     0x00000000U |
     0x00000000U |
     0x00000000U |
@@ -251,6 +250,7 @@ static const uint32 s_adcSelect[1U][3U] =
     0x00000000U |
     0x00000000U |
     0x00000000U |
+    0x00020000U |
     0x00000000U |
     0x00000000U |
     0x00000000U |
@@ -562,9 +562,6 @@ uint32 adcIsConversionComplete(adcBASE_t *adc, uint32 group)
 *   This function computes offset error using Calibration mode
 *
 */
-/* SourceId : ADC_SourceId_008 */
-/* DesignId : ADC_DesignId_010 */
-/* Requirements : HL_SR194 */
 void adcCalibration(adcBASE_t *adc)
 {
 /* USER CODE BEGIN (25) */

@@ -1,7 +1,7 @@
 /** @file system.c 
 *   @brief System Driver Source File
-*   @date 03.Apr.2015
-*   @version 04.04.00
+*   @date 17.Nov.2014
+*   @version 04.02.00
 *
 *   This file contains:
 *   - API Functions
@@ -10,7 +10,7 @@
 */
 
 /* 
-* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
+* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -300,12 +300,8 @@ void mapClocks(void)
 
 }
 
-/* SourceId : SYSTEM_SourceId_006 */
-/* DesignId : SYSTEM_DesignId_006 */
-/* Requirements : HL_SR471 */
 void systemInit(void)
 {
-	uint32 efcCheckStatus;
 
 /* USER CODE BEGIN (15) */
 /* USER CODE END */
@@ -316,14 +312,6 @@ void systemInit(void)
 	 * required to be done at full application speed while the PLL locks.
 	 */
 	setupPLL();
-	
-/* USER CODE BEGIN (16) */
-/* USER CODE END */
-
-	/* Run eFuse controller start-up checks and start eFuse controller ECC self-test.
-	 * This includes a check for the eFuse controller error outputs to be stuck-at-zero.
-	 */
-	efcCheckStatus = efcCheck();
 	
 /* USER CODE BEGIN (17) */
 /* USER CODE END */
@@ -337,33 +325,6 @@ void systemInit(void)
 	/* Configure device-level multiplexing and I/O multiplexing */
 	muxInit();
 	
-/* USER CODE BEGIN (19) */
-/* USER CODE END */
-
-	if(efcCheckStatus == 0U)
-	{
-		/* Wait for eFuse controller self-test to complete and check results */
-		if (checkefcSelfTest() == FALSE)							/* eFuse controller ECC logic self-test failed */
-		{
-			selftestFailNotification(EFCCHECK_FAIL1);           /* device operation is not reliable */
-		}
-	}
-	else if(efcCheckStatus == 2U)
-	{
-		/* Wait for eFuse controller self-test to complete and check results */
-		if (checkefcSelfTest() == FALSE)							/* eFuse controller ECC logic self-test failed */
-		{
-			selftestFailNotification(EFCCHECK_FAIL1);           /* device operation is not reliable */
-		}
-		else
-		{
-			selftestFailNotification(EFCCHECK_FAIL2);
-		}
-	}
-	else
-	{
-	/* Empty */
-	}
 /* USER CODE BEGIN (20) */
 /* USER CODE END */
 

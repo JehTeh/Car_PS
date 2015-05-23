@@ -2,7 +2,7 @@
 /* sys_link.cmd                                                               */
 /*                                                                            */
 /* 
-* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com  
+* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -41,8 +41,8 @@ define memory mem with size = 4G;
 
 define region VECTORS = mem:[from 0x00000000 size 0x00000020];
 define region FLASH   = mem:[from 0x00000020 size 0x0005FFE0];
-define region STACK   = mem:[from 0x08000000 size 0x00001500];
-define region RAM     = mem:[from 0x08001500 size 0x00006B00];
+define region STACK   = mem:[from 0x08000000 size 0x00002400];
+define region RAM     = mem:[from 0x08002400 size 0x00005c00];
 define block HEAP with size = 0x800, alignment = 8{ };
 
 initialize by copy {readwrite};

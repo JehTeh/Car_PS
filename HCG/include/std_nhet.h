@@ -1,11 +1,11 @@
 /** @file std_nhet.h
 *   @brief NHET Instruction Definition File
-*   @date 03.Apr.2015
-*   @version 04.04.00
+*   @date 17.Nov.2014
+*   @version 04.02.00
 */
 
 /* 
-* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com 
+* Copyright (C) 2009-2014 Texas Instruments Incorporated - http://www.ti.com/ 
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -46,18 +46,12 @@
 
 #include "sys_common.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* USER CODE BEGIN (1) */
 /* USER CODE END */
 
 #ifndef HET_v2
 #   define HET_v2 0
 #endif
-
-#if defined(_TMS470_BIG) || defined(__big_endian__)
 
 #ifndef HETBYTE
 #   define HETBYTE uint8
@@ -70,6 +64,8 @@ typedef struct memory_format
   uint32 data_word     ;
   uint32 reserved_word ;
 } HET_MEMORY  ;
+
+#if defined(__BIG_ENDIAN__) || defined(__big_endian__)
 
 /*---------------------------------------------*/
 /* ACMP INSTRUCTION                            */
@@ -659,11 +655,7 @@ typedef struct AND_format
 
 typedef union 
 {
-#ifdef __cplusplus
-  AND_FIELDS  and_cpp ;
-#else
   AND_FIELDS  and ;
-#endif
   HET_MEMORY  memory ;
 } AND_INSTRUCTION;
 
@@ -705,11 +697,7 @@ typedef struct OR_format
 
 typedef union 
 {
-#ifdef __cplusplus
-  OR_FIELDS  or_cpp ;
-#else
   OR_FIELDS  or ;
-#endif
   HET_MEMORY  memory ;
 } OR_INSTRUCTION;
 
@@ -750,11 +738,7 @@ typedef struct XOR_format
 
 typedef union 
 {
-#ifdef __cplusplus
-  XOR_FIELDS  xor_cpp ;
-#else
   XOR_FIELDS  xor ;
-#endif
   HET_MEMORY  memory ;
 } XOR_INSTRUCTION;
 
@@ -1282,20 +1266,8 @@ typedef union
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-#elif defined(_TMS470_LITTLE) || defined(__little_endian__)
+#else
 
-#ifndef HETBYTE
-#   define HETBYTE uint8
-#endif
-
-typedef struct memory_format
-{
-  uint32 program_word  ;
-  uint32 control_word  ;
-  uint32 data_word     ;
-  uint32 reserved_word ;
-} HET_MEMORY  ;
- 
 /*---------------------------------------------*/
 /* ACMP INSTRUCTION                            */
 /*---------------------------------------------*/
@@ -1884,11 +1856,7 @@ typedef struct AND_format
 
 typedef union 
 {
-#ifdef __cplusplus
-  AND_FIELDS  and_cpp ;
-#else
   AND_FIELDS  and ;
-#endif
   HET_MEMORY  memory ;
 } AND_INSTRUCTION;
 
@@ -1930,11 +1898,7 @@ typedef struct OR_format
 
 typedef union 
 {
-#ifdef __cplusplus
-  OR_FIELDS  or_cpp ;
-#else
   OR_FIELDS  or ;
-#endif
   HET_MEMORY  memory ;
 } OR_INSTRUCTION;
 
@@ -1976,11 +1940,7 @@ typedef struct XOR_format
 
 typedef union 
 {
-#ifdef __cplusplus
-  XOR_FIELDS  xor_cpp ;
-#else
   XOR_FIELDS  xor ;
-#endif
   HET_MEMORY  memory ;
 } XOR_INSTRUCTION;
 
@@ -2490,10 +2450,6 @@ typedef union
 
 /* USER CODE BEGIN (2) */
 /* USER CODE END */
-
-#ifdef __cplusplus
-}
-#endif /*extern "C" */
 
 #endif
 /*--------------------------- End Of File ----------------------------------*/

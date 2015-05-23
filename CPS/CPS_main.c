@@ -24,7 +24,7 @@
 #define ADC_LOWERBOUND_HORNON 0x0000u
 #define ADC_DATABUFFERSIZE 8u
 
-#define DEBOUNCE_PADDLES_MS 250 //Debounce time in milliseconds for the paddle shift signal (should be multiple of ten)
+#define DEBOUNCE_PADDLES_MS 100 //Debounce time in milliseconds for the paddle shift signal (should be multiple of ten)
 #define DEBOUNCE_HORN_MS    250 //Debounce time in milliseconds for the horn signal (off and on)
 
 #define ACTIVETIME_PADDLES_MS 50 //How long to hold the paddle switch for on a valid signal
@@ -77,10 +77,7 @@ static bool bStartUpTimeDone;
 static bool bPaddleDebounceActive;
 static bool bHornDebounceActive;
 
-static bool bShiftUpCommand;
-static bool bShiftDownCommand;
 static bool bHornActiveCommand;
-
 static bool bShiftUpHoldActive;
 static bool bShiftDownHoldActive;
 
@@ -101,23 +98,21 @@ void CPS_vMain(void)
   vInitCPS();
   for(;;)
   {
-    if(bShiftUpCommand)
+    if(bShiftUpHoldActive)
     {
       vSetOutput(eIO_ShiftUp, 1u); //activate shift up signal
-      if(!bShiftUpHoldActive)
-      {
-        vSetOutput(eIO_ShiftUp, 0u); //turn off shift up signal
-        bShiftUpCommand = 0;
-      }
     }
-    if(bShiftDownCommand)
+    else
+    {
+      vSetOutput(eIO_ShiftUp, 0u); //turn off shift up signal
+    }
+    if(bShiftDownHoldActive)
     {
       vSetOutput(eIO_ShiftDown, 1u); //activate shift up signal
-      if(!bShiftDownHoldActive)
-      {
-        vSetOutput(eIO_ShiftDown, 0u); //turn off shift up signal
-        bShiftDownCommand = 0;
-      }
+    }
+    else
+    {
+      vSetOutput(eIO_ShiftDown, 0u); //turn off shift up signal
     }
     if(bHornActiveCommand)
     {
@@ -253,24 +248,6 @@ void CPS_vISRRTICompare1(void)
       bHornDebounceActive = 0;
     }
   }
-  if(bShiftUpHoldActive)
-  {
-    u32PaddleUpHoldCounter++;
-    if(u32PaddleUpHoldCounter >= ACTIVETIME_PADDLES_MS/COMPARETIMER_CONVERSIONFACTOR)
-    {
-      u32PaddleUpHoldCounter = 0u;
-      bShiftUpHoldActive = 0;
-    }
-  }
-  if(bShiftDownHoldActive)
-  {
-    u32PaddleDownHoldCounter++;
-    if(u32PaddleDownHoldCounter >= ACTIVETIME_PADDLES_MS/COMPARETIMER_CONVERSIONFACTOR)
-    {
-      u32PaddleDownHoldCounter = 0u;
-      bShiftDownHoldActive = 0;
-    }
-  }
 }
 
 /* Local Functions */
@@ -328,11 +305,9 @@ static void vSendCommand(xHornCommands_t xCommand)
   switch(xCommand)
   {
   case eCMD_ShiftUp:
-    bShiftUpCommand = 1; //Send single shift up pulse
     bShiftUpHoldActive = 1;
     break;
   case eCMD_ShiftDown:
-    bShiftDownCommand = 1; //Send single shift down pulse
     bShiftDownHoldActive = 1;
     break;
   case eCMD_HornOn:
@@ -340,6 +315,8 @@ static void vSendCommand(xHornCommands_t xCommand)
     break;
   case eCMD_HornOff:
     bHornActiveCommand = 0; //Turn off horn
+    bShiftDownHoldActive = 0;
+    bShiftUpHoldActive = 0;
     break;
   default:
     bHornActiveCommand = 0;

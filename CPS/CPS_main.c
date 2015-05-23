@@ -16,38 +16,38 @@
 /* Defines */
 #define DEBUG == 1
 
-#define ADC_UPPERBOUND_SHFTUP 0x09D1u //These definitions set the limits for the ADC conversion to trigger a shift or horn signal.
-#define ADC_LOWERBOUND_SHFTUP 0x078Du
-#define ADC_UPPERBOUND_SHFTDN 0x0593u
-#define ADC_LOWERBOUND_SHFTDN 0x044Au
-#define ADC_UPPERBOUND_HORNON 0x0440u
+#define ADC_UPPERBOUND_SHFTUP 0x0C1Fu //These definitions set the limits for the ADC conversion to trigger a shift or horn signal.
+#define ADC_LOWERBOUND_SHFTUP 0x0747u
+#define ADC_UPPERBOUND_SHFTDN 0x0746u
+#define ADC_LOWERBOUND_SHFTDN 0x0251u
+#define ADC_UPPERBOUND_HORNON 0x0250u
 #define ADC_LOWERBOUND_HORNON 0x0000u
 #define ADC_DATABUFFERSIZE 8u
 
-#define DEBOUNCE_PADDLES_MS 30 //Debounce time in milliseconds for the paddle shift signal (should be multiple of ten)
-#define DEBOUNCE_HORN_MS    30 //Debounce time in milliseconds for the horn signal (off and on)
+#define DEBOUNCE_PADDLES_MS 250 //Debounce time in milliseconds for the paddle shift signal (should be multiple of ten)
+#define DEBOUNCE_HORN_MS    250 //Debounce time in milliseconds for the horn signal (off and on)
 
-#define ACTIVETIME_PADDLES_MS 10 //How long to hold the paddle switch for on a valid signal
+#define ACTIVETIME_PADDLES_MS 50 //How long to hold the paddle switch for on a valid signal
 
 #define HOLDTIME_PADDLES_SAMPLES 3 //Number of consecutive valid samples for an "active" signal
 #define HOLDTIME_HORN_SAMPLES 3 
 
-#define IO_BYPASSRELAY_PORT hetPORT1 //idle bypass relay used to ensure horn signal works normally if module is in error state
-#define IO_BYPASSRELAY_PIN 6u
+#define IO_BYPASSRELAY_PORT   //idle bypass relay used to ensure horn signal works normally if module is in error state
+#define IO_BYPASSRELAY_PIN  
 #define IO_BYPASSRELAY_OPEN 1u
 #define IO_BYPASSRELAY_CLOSED 0u
-#define IO_SHIFTDOWN_PORT hetPORT1 //downshift output. Signal is active low.
-#define IO_SHIFTDOWN_PIN 0u
-#define IO_SHIFTDOWN_ON 0u
-#define IO_SHIFTDOWN_OFF 1u
-#define IO_SHIFTUP_PORT hetPORT1 //upshift output. Signal is active low.
-#define IO_SHIFTUP_PIN 1u
-#define IO_SHIFTUP_ON 0u
-#define IO_SHIFTUP_OFF 1u
-#define IO_HORN_PORT hetPORT1 //horn output. Signal?
-#define IO_HORN_PIN 2u
-#define IO_HORN_ON 0u
-#define IO_HORN_OFF 1u
+#define IO_SHIFTDOWN_PORT spiPORT2 //downshift output. Signal is active low.
+#define IO_SHIFTDOWN_PIN SPI_PIN_CLK
+#define IO_SHIFTDOWN_ON 1u
+#define IO_SHIFTDOWN_OFF 0u
+#define IO_SHIFTUP_PORT spiPORT2 //upshift output. Signal is active low.
+#define IO_SHIFTUP_PIN SPI_PIN_SIMO
+#define IO_SHIFTUP_ON 1u
+#define IO_SHIFTUP_OFF 0u
+#define IO_HORN_PORT spiPORT3 //horn output. Signal?
+#define IO_HORN_PIN SPI_PIN_SOMI
+#define IO_HORN_ON 1u
+#define IO_HORN_OFF 0u
 
 #define STARTUPTIME_MS 3000 //CPS "start up" time in milliseconds. All ADC signals are ignored until this time has expired.
 
@@ -278,6 +278,7 @@ static void vInitCPS(void)
 {
   gioInit();
   hetInit();
+  spiInit();
   adcInit();
   rtiInit();
   bStartUpTimeDone = 0;
@@ -289,7 +290,7 @@ static void vInitCPS(void)
   {
     //Wait for start up time to expire
   }
-  gioSetBit(IO_BYPASSRELAY_PORT, IO_BYPASSRELAY_PIN, IO_BYPASSRELAY_OPEN); //
+  gioSetBit(IO_HORN_PORT, IO_HORN_PIN, IO_HORN_OFF); //
   adcEnableNotification(adcREG1, adcGROUP1); //Enable ADC ISR routine
   adcResetFiFo(adcREG1, adcGROUP1);
   adcStartConversion(adcREG1, adcGROUP1);
@@ -395,7 +396,7 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
     if(u32OutputValue == 1)
     {
 
-      //gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_ON);
+      gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_ON);
 
       gioSetBit(gioPORTA, 2u, 0u); //Debug horn other led ON
       gioSetBit(hetPORT1, 8u, 1u);
@@ -404,7 +405,7 @@ static void vSetOutput(xIOSignals_t xOutputType, uint32_t u32OutputValue)
     else
     {
 
-      //gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_OFF);
+      gioSetBit(IO_SHIFTDOWN_PORT, IO_SHIFTDOWN_PIN, IO_SHIFTDOWN_OFF);
 
       gioSetBit(gioPORTA, 2u, 0u); //Debug both LED Off
       gioSetBit(hetPORT1, 8u, 0u);

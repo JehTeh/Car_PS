@@ -20,6 +20,7 @@
 #include "sci.h"
 #include "rti.h"
 #include "adc.h"
+#include "spi.h"
 
 /* Defines */
 
